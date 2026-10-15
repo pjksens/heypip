@@ -117,6 +117,7 @@ Each meeting is a folder in `~/Documents/Pip/<date>_<name>/`:
 | `notes.md` | written by your agent; the newest line pops out of the notch |
 | `summary.md` | written by your agent when the meeting ends (if you ask it to) |
 | `you.m4a`, `them.m4a` | the audio of each side |
+| `screens/` | with Claude Code: screenshots of what was on your screen, kept only where it changed or when it mattered (see below) |
 
 `~/Documents/Pip/current` always points to the meeting in progress.
 
@@ -129,7 +130,7 @@ Your agent follows `agent-feed.md` and adds one short line per note to `notes.md
 1. Install the `/pip` command, once:
 
    ```bash
-   mkdir -p ~/.claude/skills/pip && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/SKILL.md -o ~/.claude/skills/pip/SKILL.md
+   mkdir -p ~/.claude/skills/pip && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/SKILL.md -o ~/.claude/skills/pip/SKILL.md && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/screens.sh -o ~/.claude/skills/pip/screens.sh
    ```
 
 2. Before the call, run `claude` in a terminal and type `/pip` with who you are meeting and what you want out of it:
@@ -143,6 +144,13 @@ Your agent follows `agent-feed.md` and adds one short line per note to `notes.md
 
 During the call you can ask Claude out loud: « Claude, what did they pay last time? ». The answer comes as the next
 note (the other side hears the question too).
+
+**Screenshots.** Claude also keeps what was shown on screen: a capture every 15 seconds while the meeting runs, plus
+one at once when a screen is shared, a document or a number is shown, or you say « Claude, capture ». When the meeting
+ends, only the key captures and those where the screen changed are kept, in `screens/` with an `index.md`; the rest is
+deleted, and the summary cites each kept image. Everything stays in the meeting folder. The app that runs Claude Code
+(your terminal, or the Claude app) needs **Screen Recording** in System Settings. Type `/pip --no-screens …` to skip
+screenshots for a call.
 
 A meeting recorded without an agent can be summarised afterwards: `/pip summary` (the latest meeting) or
 `/pip summary ~/Documents/Pip/<folder>` writes `summary.md` in that folder.
