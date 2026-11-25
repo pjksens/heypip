@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+- The island finds the notch when an external display is the main screen. It used to show up off screen, or float in
+  the middle of the other display after one was plugged in or made main. Pip now looks for the notch again when a
+  display is plugged in, unplugged or rearranged, and when the Mac wakes up (#11).
+- A double click on « Stop » no longer starts a new, empty meeting (#11).
+
 ## 0.1.3
 
 - The call no longer leaks into « You »: a leak through headphones (or the echo from speakers) used to come out as
