@@ -24,7 +24,9 @@ struct NotchGeometry {
     let screen = NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main ?? NSScreen.screens[0]
     if screen.safeAreaInsets.top > 0, let l = screen.auxiliaryTopLeftArea, let r = screen.auxiliaryTopRightArea {
       return NotchGeometry(screen: screen, hasNotch: true, notchWidth: r.minX - l.maxX, height: screen.safeAreaInsets.top,
-                           centerX: screen.frame.minX + (l.maxX + r.minX) / 2)
+                           // the two areas are already in global coordinates: adding the screen's origin again put the
+                           // island off screen whenever the notched screen was not the main one (second display as main)
+                           centerX: (l.maxX + r.minX) / 2)
     }
     return NotchGeometry(screen: screen, hasNotch: false, notchWidth: 120, height: 30, centerX: screen.frame.midX)
   }
@@ -39,7 +41,11 @@ struct NotchGeometry {
   @Published var restingPip = Store.restingPip { didSet { Store.restingPip = restingPip } }
   /// Pip lives in the menu bar instead of around the notch.
   @Published var inMenuBar = Store.inMenuBar { didSet { Store.inMenuBar = inMenuBar } }
-  let geometry = NotchGeometry.detect()
+  /// Measured again whenever the screens change (a display plugged in, unplugged, made main, the lid opened or
+  /// closed): screen coordinates move with the main display, so a geometry kept from launch puts the island in the
+  /// wrong place, often floating in the middle of another screen.
+  @Published private(set) var geometry = NotchGeometry.detect()
+  func redetect() { geometry = NotchGeometry.detect() }
   let agentName = UserDefaults.standard.string(forKey: "agentName") ?? "Claude"
 
   static let openWidth: CGFloat = 600
@@ -135,8 +141,13 @@ final class NotchPanel: NSPanel {
       self?.followPointer()
     }.store(in: &bag)
 
+    // Screens plugged, unplugged or rearranged, or the Mac waking up: find the notch again and move there. macOS
+    // can send the change before the new layout settles, so look again a moment later.
     NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
-      Task { @MainActor in self?.placePanel() }
+      Task { @MainActor in self?.screensChanged() }
+    }
+    NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+      Task { @MainActor in self?.screensChanged() }
     }
     // Notch or menu bar: switching from the settings moves Pip right away.
     state.$inMenuBar.dropFirst().receive(on: RunLoop.main).sink { [weak self] inMenuBar in
@@ -150,6 +161,19 @@ final class NotchPanel: NSPanel {
 
     watchPointer()
     applyPlacement(show: false)
+  }
+
+  private func screensChanged() {
+    state.redetect()
+    placePanel()
+    followPointer()
+    Task { [weak self] in
+      try? await Task.sleep(for: .seconds(1))
+      guard let self else { return }
+      self.state.redetect()
+      self.placePanel()
+      self.followPointer()
+    }
   }
 
   private func placePanel() {
