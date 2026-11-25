@@ -135,6 +135,8 @@ func hasSound(_ buf: AVAudioPCMBuffer) -> Bool { rms(buf) > 0.01 }
   private let timeFormat: DateFormatter = { let f = DateFormatter(); f.dateFormat = "HH:mm:ss"; return f }()
 
   func toggle() {
+    // « Stop » turns into « Start » under the pointer: a double click on « Stop » must not start a new meeting
+    if !running, let endedAt, Date().timeIntervalSince(endedAt) < 2 { return }
     Task { running ? await stop() : await start() }
   }
 
