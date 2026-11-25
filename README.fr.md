@@ -124,6 +124,7 @@ Chaque réunion est un dossier dans `~/Documents/Pip/<date>_<nom>/` :
 | `notes.md` | écrit par ton agent ; la dernière ligne sort de l'encoche |
 | `summary.md` | écrit par ton agent à la fin de la réunion (si tu le lui demandes) |
 | `you.m4a`, `them.m4a` | le son de chaque côté |
+| `screens/` | avec Claude Code : des captures de ton écran, gardées seulement là où il a changé ou quand ça comptait (voir plus bas) |
 
 `~/Documents/Pip/current` pointe toujours vers la réunion en cours.
 
@@ -136,7 +137,7 @@ Ton agent suit `agent-feed.md` et ajoute une ligne courte par note dans `notes.m
 1. Installe la commande `/pip`, une seule fois :
 
    ```bash
-   mkdir -p ~/.claude/skills/pip && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/SKILL.md -o ~/.claude/skills/pip/SKILL.md
+   mkdir -p ~/.claude/skills/pip && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/SKILL.md -o ~/.claude/skills/pip/SKILL.md && curl -fsSL https://raw.githubusercontent.com/pjksens/heypip/main/integrations/claude-code/pip/screens.sh -o ~/.claude/skills/pip/screens.sh
    ```
 
 2. Avant l'appel, lance `claude` dans un terminal et tape `/pip` avec qui tu rencontres et ce que tu veux obtenir :
@@ -147,6 +148,13 @@ Ton agent suit `agent-feed.md` et ajoute une ligne courte par note dans `notes.m
 
 3. Appuie sur **Démarrer** dans Pip, avec **✦ Claude** activé. Les notes sortent de l'encoche ; quand tu arrêtes, le
    résumé est dans `summary.md`.
+
+**Captures d'écran.** Claude garde aussi ce qui a été montré à l'écran : une capture toutes les 15 secondes pendant la
+réunion, plus une immédiate quand un écran est partagé, qu'un document ou un chiffre est montré, ou quand tu dis
+« Claude, capture ». À la fin, seules les captures clés et celles où l'écran a changé sont gardées, dans `screens/`
+avec un `index.md` ; le reste est effacé, et le résumé cite chaque image gardée. Tout reste dans le dossier de la
+réunion. L'app qui fait tourner Claude Code (ton terminal, ou l'app Claude) a besoin d'**Enregistrement de l'écran**
+dans Réglages Système. Tape `/pip --no-screens …` pour t'en passer sur un appel.
 
 Sans la commande, dis à Claude qui tu rencontres et ce que tu veux obtenir, puis colle :
 
